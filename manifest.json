@@ -3,6 +3,7 @@
   "name": "arXiv GPT summarizer",
   "version": "1.0",
   "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["https://api.openai.com/"],
   "action": {
     // "default_popup": "popup.html"
     // "default_icon": {
@@ -13,5 +14,6 @@
   },
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "options_page": "options.html"
 }

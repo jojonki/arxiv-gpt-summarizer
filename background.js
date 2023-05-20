@@ -1,37 +1,44 @@
-// chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-//   translateAndSummarize(request.text).then(sendResponse);
-//   return true; // Will respond asynchronously.
-// });
+function getAbstText() {
+  let absElement = document.querySelector("#abs");
+  if (!absElement) {
+    return "aaa";
+  }
+  let blockquote = absElement.querySelector("blockquote");
+  // safely get text from blockquote if blockquote exists
+  if (blockquote) {
+    return blockquote.textContent;
+  }
 
-function getPageTitle() {
-  // This function is converted to a string and runs in the context of the current tab.
-  return document.title;
+  return "bbb";
 }
 
 function insertTranslation(translation) {
-  // let div = document.createElement("blackquote");
-  // div.textContent = translation;
-  // div.className = "abstract mathjax";
-
-  // Find the element with id="abs" and class="metatable", and insert the new div before it.
   let absElement = document.querySelector("#abs");
   let blockquote = absElement.querySelector("blockquote");
-  // absElement.insertBefore(div, metaTableElement);
   if (blockquote.textContent.length > 0) {
-    blockquote.append(document.createElement("br"));
-    blockquote.append(document.createElement("br"));
-  }
+    let insertText = document.createElement("span"); // Create a new span element
+    insertText.style.color = "blue";
+    insertText.append(document.createElement("br"));
+    insertText.append(document.createElement("br"));
+    insertText.append(document.createTextNode(translation));
 
-  // Append the translated text.
-  blockquote.append(document.createTextNode(translation));
+    blockquote.appendChild(insertText);
+  }
+}
+
+function getApiKey() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get("apiKey", (items) => {
+      resolve(items.apiKey);
+    });
+  });
 }
 
 chrome.action.onClicked.addListener((tab) => {
-  // Run a content script in the current tab to get the page title.
   chrome.scripting.executeScript(
     {
       target: { tabId: tab.id },
-      function: getPageTitle,
+      function: getAbstText,
     },
     (results) => {
       // `results` is an array of results from each frame in the tab.
@@ -53,32 +60,34 @@ chrome.action.onClicked.addListener((tab) => {
 });
 
 async function translateAndSummarize(text) {
-  return text + " ---> TEST TRANSLATED TEXT";
-  let translatedText = await callOpenAI(
-    `Translate the following English text to Japanese:\n"${text}"`
-  );
   let summarizedText = await callOpenAI(
-    `Summarize the following Japanese text:\n"${translatedText}"`
+    `次に示す学術論文のabstractを分かりやすく日本語に3行程度に要約:\n"${text}"`
   );
   return summarizedText;
 }
 
 async function callOpenAI(prompt) {
-  let response = await fetch(
-    "https://api.openai.com/v1/engines/davinci-codex/completions",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer YOUR_OPENAI_API_KEY",
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        max_tokens: 60,
-      }),
-    }
-  );
+  const apiKey = await getApiKey();
+  if (apiKey == null) {
+    return "Please set API key in the extension options.";
+  }
+  let response = await fetch("https://api.openai.com/v1/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + apiKey,
+    },
+    body: JSON.stringify({
+      model: "text-davinci-003",
+      prompt: prompt,
+      max_tokens: 1000,
+    }),
+  });
 
   let data = await response.json();
-  return data.choices[0].text.strip();
+  console.log(data);
+  if (data.choices.length == 0) {
+    return "No response from OpenAI API.";
+  }
+  return data.choices[0].text;
 }
