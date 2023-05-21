@@ -59,7 +59,7 @@ function addWaitingDom() {
   insertText.id = "arxiv-gpt-summarizer-waiting";
   insertText.append(document.createElement("br"));
   insertText.append(document.createElement("br"));
-  insertText.append(document.createTextNode("Calling OpenAI API..."));
+  insertText.append(document.createTextNode("Now generating summary..."));
   blockquote.appendChild(insertText);
 }
 
@@ -96,6 +96,7 @@ async function translateAndSummarize(paperInfo) {
   if (abst) {
     prompt = prompt.replace("${abst}", abst);
   }
+  console.log(prompt);
   let summarizedText = await callOpenAI(prompt);
 
   return summarizedText;
@@ -109,6 +110,11 @@ async function callOpenAI(prompt) {
   if (!apiKey) {
     return "Please set API key in the extension options.";
   }
+  const engine = await getSettingsValues("engine");
+  if (!engine) {
+    return "Please set correct LLM engine";
+  }
+  console.log("Use engine: " + engine);
   let response = await fetch("https://api.openai.com/v1/completions", {
     method: "POST",
     headers: {
@@ -116,9 +122,10 @@ async function callOpenAI(prompt) {
       Authorization: "Bearer " + apiKey,
     },
     body: JSON.stringify({
-      model: "text-davinci-003",
+      model: engine,
       prompt: prompt,
       max_tokens: 1000,
+      temperature: 0,
     }),
   });
 
@@ -131,6 +138,7 @@ async function callOpenAI(prompt) {
   ) {
     return "Failed to fetch response from OpenAI API. Please check your OpenAI API key at settings page.";
   }
+  console.log(data);
   return data.choices[0].text;
 }
 

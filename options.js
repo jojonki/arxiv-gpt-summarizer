@@ -1,8 +1,27 @@
+const apiKeyInput = document.getElementById("apiKey");
+const engineInput = document.getElementById("engine");
+const promptInput = document.getElementById("prompt");
+
+// Load saved values when the page is loaded
+window.onload = function () {
+  chrome.storage.sync.get(["apiKey", "engine", "prompt"], function (result) {
+    if (result.apiKey !== undefined) {
+      apiKeyInput.value = result.apiKey;
+    }
+    if (result.engine !== undefined) {
+      engineInput.value = result.engine;
+    }
+    if (result.prompt !== undefined) {
+      promptInput.value = result.prompt;
+    }
+  });
+};
+
 document.getElementById("settingsForm").addEventListener("submit", (event) => {
   event.preventDefault();
-  let apiKey = document.getElementById("apiKey").value;
-  let prompt = document.getElementById("prompt").value;
-  // let temperature = document.getElementById("temperature").value;
+  let apiKey = apiKeyInput.value;
+  let engine = engineInput.value;
+  let prompt = promptInput.value;
 
   let messageElement = document.getElementById("message");
   if (!apiKey) {
@@ -15,10 +34,13 @@ document.getElementById("settingsForm").addEventListener("submit", (event) => {
   }
 
   // Save the settings
-  chrome.storage.sync.set({ apiKey: apiKey, prompt: prompt }, function () {
-    messageElement.textContent = "Settings saved!";
-    setTimeout(function () {
-      messageElement.textContent = "";
-    }, 3000);
-  });
+  chrome.storage.sync.set(
+    { apiKey: apiKey, engine: engine, prompt: prompt },
+    function () {
+      messageElement.textContent = "Settings saved!";
+      setTimeout(function () {
+        messageElement.textContent = "";
+      }, 3000);
+    }
+  );
 });

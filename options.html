@@ -20,18 +20,34 @@
                 href="https://platform.openai.com/account/api-keys" target="_blank">OpenAI</a>.
         </label><br>
         <input type="text" id="apiKey" name="apiKey"><br>
+        <br>
+        <label for="engine">Engine:</label>
+        <select id="engine">
+            <option value="text-davinci-003" selected>text-davinci-003</option>
+            <option value="text-curie-001">text-curie-001</option>
+            <option value="text-babbage-001">text-babbage-001</option>
+            <option value="text-ada-001">text-ada-001</option>
+        </select><br>
+        <br>
         <label for="prompt">Prompt: This prompt for <i>text-davinci-003</i> will be
             <i>
                 <b>${prompt}\n${arxiv_abst}</b>
             </i>.</label><br>
-        <textarea id="prompt" name="prompt" rows="5">あなたは優秀な研究者です．論文のタイトルとアブストラクトを与えるので１００文字程度に要約してください。
-論文のタイトル：「${title}」。
-論文のアブストラクト：「${abst}」。
-それでは開始します。
-日本語で１００文字程度に要約した文章:
-        </textarea><br>
-        <!-- <label for="temperature">Temperature:</label><br>
-        <input type="number" id="temperature" name="temperature" value="0.3" step="0.1" min="0" max="1"><br> -->
+        <textarea id="prompt" name="prompt" rows="30">あなたは優秀な研究者です。論文のタイトルとアブストラクトを与えるので簡潔に短い文で要約してください。
+# 要約結果は必ず以下のルールに従ってください。
+- 文は"。"で終わる
+- 各文はシンプルで簡潔であり80トークン以下
+- 要約に含まれる文は最大２つまで
+- 要約結果は全部で160トークン以下
+
+# 論文のタイトル
+${title}
+
+# 論文のアブストラクト
+${abst}
+
+日本語の要約文章:</textarea><br>
+        <br>
         <input type="submit" value="Save">
     </form>
 
