@@ -15,6 +15,10 @@ function getSettingsValues(key) {
 }
 
 function getAbstText() {
+  let titleText = "";
+  let abstText = "";
+
+  // abst
   let absElement = document.querySelector("#abs");
   if (!absElement) {
     return null;
@@ -23,7 +27,22 @@ function getAbstText() {
   if (!blockquote) {
     return null;
   }
-  return blockquote.textContent;
+  let descriptor = blockquote.querySelector(".descriptor");
+  if (descriptor) {
+    abstText = blockquote.textContent
+      .replace(descriptor.textContent, "")
+      .trim();
+  }
+
+  let titleElement = document.querySelector(".title.mathjax");
+  if (titleElement) {
+    descriptor = titleElement.querySelector(".descriptor");
+    titleText = titleElement.textContent
+      .replace(descriptor.textContent, "")
+      .trim();
+  }
+
+  return { title: titleText, abst: abstText };
 }
 
 function addWaitingDom() {
@@ -65,15 +84,27 @@ function insertTranslation(translation) {
   }
 }
 
-async function translateAndSummarize(text) {
-  const prompt = await getSettingsValues("prompt");
-  let summarizedText = await callOpenAI(`${prompt}\n"${text}"`);
+async function translateAndSummarize(paperInfo) {
+  let prompt = await getSettingsValues("prompt");
+  console.log(prompt);
+  console.log(paperInfo);
+  let title = paperInfo.title;
+  let abst = paperInfo.abst;
+  if (title) {
+    prompt = prompt.replace("${title}", title);
+  }
+  if (abst) {
+    prompt = prompt.replace("${abst}", abst);
+  }
+  let summarizedText = await callOpenAI(prompt);
+
   return summarizedText;
 }
 
 async function callOpenAI(prompt) {
-  // await _debug_sleep(3000);
-  // return "test text";
+  // await _debug_sleep(500);
+  // return prompt;
+
   const apiKey = await getSettingsValues("apiKey");
   if (!apiKey) {
     return "Please set API key in the extension options.";
@@ -124,9 +155,9 @@ chrome.action.onClicked.addListener((tab) => {
 
       // `results` is an array of results from each frame in the tab.
       // We're only interested in the result from the top-level frame.
-      let abstText = results[0].result;
+      let paperInfo = results[0].result;
 
-      translateAndSummarize(abstText).then((result) => {
+      translateAndSummarize(paperInfo).then((result) => {
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
           function: insertTranslation,
