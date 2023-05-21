@@ -1,29 +1,5 @@
-function getAbstText() {
-  let absElement = document.querySelector("#abs");
-  if (!absElement) {
-    return "aaa";
-  }
-  let blockquote = absElement.querySelector("blockquote");
-  // safely get text from blockquote if blockquote exists
-  if (blockquote) {
-    return blockquote.textContent;
-  }
-
-  return "bbb";
-}
-
-function insertTranslation(translation) {
-  let absElement = document.querySelector("#abs");
-  let blockquote = absElement.querySelector("blockquote");
-  if (blockquote.textContent.length > 0) {
-    let insertText = document.createElement("span"); // Create a new span element
-    insertText.style.color = "blue";
-    insertText.append(document.createElement("br"));
-    insertText.append(document.createElement("br"));
-    insertText.append(document.createTextNode(translation));
-
-    blockquote.appendChild(insertText);
-  }
+function _debug_sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function getSettingsValues(key) {
@@ -36,6 +12,49 @@ function getSettingsValues(key) {
       }
     });
   });
+}
+
+function getAbstText() {
+  let absElement = document.querySelector("#abs");
+  if (!absElement) {
+    return null;
+  }
+  let blockquote = absElement.querySelector("blockquote");
+  if (!blockquote) {
+    return null;
+  }
+  return blockquote.textContent;
+}
+
+function addWaitingDom() {
+  let absElement = document.querySelector("#abs");
+  let blockquote = absElement.querySelector("blockquote");
+  let insertText = document.createElement("span");
+  insertText.style.color = "gray";
+  insertText.id = "waiting";
+  insertText.append(document.createElement("br"));
+  insertText.append(document.createElement("br"));
+  insertText.append(document.createTextNode("Calling OpenAI API..."));
+  blockquote.appendChild(insertText);
+}
+
+function insertTranslation(translation) {
+  let waitingDom = document.querySelector("#waiting");
+  if (waitingDom) {
+    waitingDom.parentNode.removeChild(waitingDom);
+  }
+
+  let absElement = document.querySelector("#abs");
+  let blockquote = absElement.querySelector("blockquote");
+  if (blockquote.textContent.length > 0) {
+    let insertText = document.createElement("span");
+    insertText.style.color = "blue";
+    insertText.append(document.createElement("br"));
+    insertText.append(document.createElement("br"));
+    insertText.append(document.createTextNode(translation));
+
+    blockquote.appendChild(insertText);
+  }
 }
 
 async function translateAndSummarize(text) {
@@ -71,7 +90,6 @@ async function callOpenAI(prompt) {
   ) {
     return "Failed to fetch response from OpenAI API. Please check your OpenAI API key at settings page.";
   }
-  console.log(data);
   return data.choices[0].text;
 }
 
@@ -88,14 +106,17 @@ chrome.action.onClicked.addListener((tab) => {
       function: getAbstText,
     },
     (results) => {
+      // insert waiting dom
+      chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: addWaitingDom,
+      });
+
       // `results` is an array of results from each frame in the tab.
       // We're only interested in the result from the top-level frame.
-      let pageTitle = results[0].result;
+      let abstText = results[0].result;
 
-      // Translate and summarize the page title.
-      translateAndSummarize(pageTitle).then((result) => {
-        console.log(result); // You can change this to do whatever you want with the result.
-        // Insert the result into the DOM of the current tab.
+      translateAndSummarize(abstText).then((result) => {
         chrome.scripting.executeScript({
           target: { tabId: tab.id },
           function: insertTranslation,
