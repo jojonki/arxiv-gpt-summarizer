@@ -26,24 +26,27 @@ function insertTranslation(translation) {
   }
 }
 
-function getApiKey() {
+function getSettingsValues(key) {
   return new Promise((resolve) => {
-    chrome.storage.sync.get("apiKey", (items) => {
-      resolve(items.apiKey);
+    chrome.storage.sync.get(key, (items) => {
+      if (items[key] === undefined) {
+        reject(new Error(`Setting not found: ${key}`));
+      } else {
+        resolve(items[key]);
+      }
     });
   });
 }
 
 async function translateAndSummarize(text) {
-  let summarizedText = await callOpenAI(
-    `次に示す学術論文のabstractを分かりやすく日本語に3行程度に要約:\n"${text}"`
-  );
+  const prompt = await getSettingsValues("prompt");
+  let summarizedText = await callOpenAI(`${prompt}\n"${text}"`);
   return summarizedText;
 }
 
 async function callOpenAI(prompt) {
-  const apiKey = await getApiKey();
-  if (apiKey == null) {
+  const apiKey = await getSettingsValues("apiKey");
+  if (!apiKey) {
     return "Please set API key in the extension options.";
   }
   let response = await fetch("https://api.openai.com/v1/completions", {
@@ -60,10 +63,15 @@ async function callOpenAI(prompt) {
   });
 
   let data = await response.json();
-  console.log(data);
-  if (data.choices.length == 0) {
-    return "No response from OpenAI API.";
+  if (
+    !data ||
+    !data.choices ||
+    data.choices.length == 0 ||
+    data.choices[0].text == ""
+  ) {
+    return "Failed to fetch response from OpenAI API. Please check your OpenAI API key at settings page.";
   }
+  console.log(data);
   return data.choices[0].text;
 }
 
