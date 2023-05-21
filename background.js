@@ -59,7 +59,7 @@ function addWaitingDom() {
   insertText.id = "arxiv-gpt-summarizer-waiting";
   insertText.append(document.createElement("br"));
   insertText.append(document.createElement("br"));
-  insertText.append(document.createTextNode("Now generating summary..."));
+  insertText.append(document.createTextNode("Generating summary..."));
   blockquote.appendChild(insertText);
 }
 
