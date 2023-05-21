@@ -1,10 +1,35 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+    <meta charset="UTF-8">
+    <style>
+        input,
+        textarea {
+            width: 80%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
 <body>
-    <h1>Set your OpenAI API Key</h1>
-    <input id="apiKey" type="text">
-    <button id="saveButton">Save</button>
+    <h1>arXiv GPT summarizer</h1>
+    <h2>Set your settings.</h2>
+    <div>If you don't have a API key, please generate your API key at <a
+            href="https://platform.openai.com/account/api-keys">OpenAI</a>.
+    </div>
+    <form id="settingsForm">
+        <label for="apiKey">API Key:</label><br>
+        <input type="text" id="apiKey" name="apiKey"><br>
+        <label for="prompt">Prompt:</label><br>
+        <textarea id="prompt" name="prompt" rows="5" value="次に示す学術論文のabstractを分かりやすく日本語に3行程度に要約: "></textarea><br>
+        <!-- <label for="temperature">Temperature:</label><br>
+        <input type="number" id="temperature" name="temperature" value="0.3" step="0.1" min="0" max="1"><br> -->
+        <input type="submit" value="Save">
+    </form>
+
+
+    <div id="message"></div>
     <script src="options.js"></script>
 </body>
 

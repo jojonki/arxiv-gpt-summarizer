@@ -34,31 +34,6 @@ function getApiKey() {
   });
 }
 
-chrome.action.onClicked.addListener((tab) => {
-  chrome.scripting.executeScript(
-    {
-      target: { tabId: tab.id },
-      function: getAbstText,
-    },
-    (results) => {
-      // `results` is an array of results from each frame in the tab.
-      // We're only interested in the result from the top-level frame.
-      let pageTitle = results[0].result;
-
-      // Translate and summarize the page title.
-      translateAndSummarize(pageTitle).then((result) => {
-        console.log(result); // You can change this to do whatever you want with the result.
-        // Insert the result into the DOM of the current tab.
-        chrome.scripting.executeScript({
-          target: { tabId: tab.id },
-          function: insertTranslation,
-          args: [result],
-        });
-      });
-    }
-  );
-});
-
 async function translateAndSummarize(text) {
   let summarizedText = await callOpenAI(
     `次に示す学術論文のabstractを分かりやすく日本語に3行程度に要約:\n"${text}"`
@@ -91,3 +66,34 @@ async function callOpenAI(prompt) {
   }
   return data.choices[0].text;
 }
+
+chrome.runtime.onInstalled.addListener(function (details) {
+  if (details.reason == "install") {
+    chrome.tabs.create({ url: "options.html" });
+  }
+});
+
+chrome.action.onClicked.addListener((tab) => {
+  chrome.scripting.executeScript(
+    {
+      target: { tabId: tab.id },
+      function: getAbstText,
+    },
+    (results) => {
+      // `results` is an array of results from each frame in the tab.
+      // We're only interested in the result from the top-level frame.
+      let pageTitle = results[0].result;
+
+      // Translate and summarize the page title.
+      translateAndSummarize(pageTitle).then((result) => {
+        console.log(result); // You can change this to do whatever you want with the result.
+        // Insert the result into the DOM of the current tab.
+        chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          function: insertTranslation,
+          args: [result],
+        });
+      });
+    }
+  );
+});
