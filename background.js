@@ -27,11 +27,17 @@ function getAbstText() {
 }
 
 function addWaitingDom() {
+  let summaryId = "arxiv-gpt-summarizer-summary";
+  let summaryDom = document.querySelector("#" + summaryId);
+  if (summaryDom) {
+    summaryDom.parentNode.removeChild(summaryDom);
+  }
+
   let absElement = document.querySelector("#abs");
   let blockquote = absElement.querySelector("blockquote");
   let insertText = document.createElement("span");
   insertText.style.color = "gray";
-  insertText.id = "waiting";
+  insertText.id = "arxiv-gpt-summarizer-waiting";
   insertText.append(document.createElement("br"));
   insertText.append(document.createElement("br"));
   insertText.append(document.createTextNode("Calling OpenAI API..."));
@@ -39,7 +45,8 @@ function addWaitingDom() {
 }
 
 function insertTranslation(translation) {
-  let waitingDom = document.querySelector("#waiting");
+  let summaryId = "arxiv-gpt-summarizer-summary";
+  let waitingDom = document.querySelector("#arxiv-gpt-summarizer-waiting");
   if (waitingDom) {
     waitingDom.parentNode.removeChild(waitingDom);
   }
@@ -49,6 +56,7 @@ function insertTranslation(translation) {
   if (blockquote.textContent.length > 0) {
     let insertText = document.createElement("span");
     insertText.style.color = "blue";
+    insertText.id = summaryId;
     insertText.append(document.createElement("br"));
     insertText.append(document.createElement("br"));
     insertText.append(document.createTextNode(translation));
@@ -64,6 +72,8 @@ async function translateAndSummarize(text) {
 }
 
 async function callOpenAI(prompt) {
+  // await _debug_sleep(3000);
+  // return "test text";
   const apiKey = await getSettingsValues("apiKey");
   if (!apiKey) {
     return "Please set API key in the extension options.";
